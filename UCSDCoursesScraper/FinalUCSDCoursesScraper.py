@@ -34,9 +34,6 @@ import pickle
 # -------------------Initialization Message-------------------
 print("Welcome to the UCSD WebREG to Google calendar course conversion wizard.")
 print("Initializing program. Please wait, this may take a few seconds...\n")
-time.sleep(
-    5
-)  # gives time to abort program before it deletes my calendar in case I accidentally started it
 # ------------------------------------------------------------
 
 # --------------Calendar Service Initialization-------------
@@ -105,16 +102,6 @@ redirectPage = ""  # global variable. Will always be equal to the redirected pag
 # of the function "checkRedirectFrom."
 savedPage = ""  # stores current.url from most recent call of savePage(). Intended for use with checkRedirectFrom and WebDriverWait.
 # *******************Calendar Variables*******************
-customCalendarTitle = "UCSD Courses Calendar (Do Not Edit)"
-currentCalendarsNamesToID = (
-    {}
-)  # used to contain the correlating IDs of all existing calendars to their names
-
-UCSDCoursesCalendarMetaData = {
-    "summary": "UCSD Courses Calendar (Do Not Edit)",
-    "description": "This calendar has been created autonomously using Python. Do not add to it otherwise your events may be deleted",
-    "timeZone": "America/Los_Angeles",
-}
 eventTemplate = {
     "summary": "",
     "location": "",
@@ -234,17 +221,6 @@ def convert_mmddyyyy_to_RFC_datetime(planeDate, hour=0, minute=0):
 # ------------------------------------------------------------
 
 # ---------------------------Code-----------------------------
-# this code is used to recreate the UCSD calendar each time the program is run
-for individualCalendar in service.calendarList().list().execute()["items"]:
-    currentCalendarsNamesToID[individualCalendar["summary"]] = individualCalendar["id"]
-if customCalendarTitle in currentCalendarsNamesToID:
-    service.calendarList().delete(
-        calendarId=currentCalendarsNamesToID[customCalendarTitle]
-    ).execute()
-UCSDCalendar = service.calendars().insert(body=UCSDCoursesCalendarMetaData).execute()
-UCSDCalendarID = UCSDCalendar["id"]  # needed later for event creation
-# *********************************************************
-
 pp = pprint.PrettyPrinter()
 driver = webdriver.Chrome(service=driverService, options=webdriverOptions)
 driver.get(webregAddress)
@@ -621,8 +597,8 @@ try:  # used so that on an error, we can execute code to properly close the sele
                         endQuarterYear, endQuarterMonth, endQuarterDay
                     )  # used in following section to ensure that input end date is after input start date
                     endQuarterDatetimeDay -= datetime.timedelta(
-                        days=7
-                    )  # the last 8 days of the quarter are for finals and will thus not have normal courses during them.
+                        days=6
+                    )  # the last 7 days of the quarter are for finals and will thus not have normal courses during them.
                     validEndDateEntry = True
                 except Exception:
                     print("\nError: Invalid date. Please try again:\n")
@@ -669,6 +645,29 @@ try:  # used so that on an error, we can execute code to properly close the sele
                     )
             # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
         # ---------------------------------------------------------------------------------------------
+
+    # -------------Creating/Recreating Calendar Instance To Be Filled In By Later Code------------
+    currentCalendarsNamesToID = (
+        {}
+    )  # used to contain the correlating IDs of all existing calendars to their names
+    customCalendarTitle = "UCSD " + selectedTerm[-4:] + " " + selectedTerm[:-5]
+    UCSDCoursesCalendarMetaData = {
+        "summary": customCalendarTitle,
+        "description": "This calendar has been created autonomously using Python. Do not add to it otherwise your events may be deleted",
+        "timeZone": "America/Los_Angeles",
+    }
+    for individualCalendar in service.calendarList().list().execute()["items"]:
+        currentCalendarsNamesToID[individualCalendar["summary"]] = individualCalendar[
+            "id"
+        ]
+    if customCalendarTitle in currentCalendarsNamesToID:
+        service.calendarList().delete(
+            calendarId=currentCalendarsNamesToID[customCalendarTitle]
+        ).execute()
+    UCSDCalendar = (
+        service.calendars().insert(body=UCSDCoursesCalendarMetaData).execute()
+    )
+    UCSDCalendarID = UCSDCalendar["id"]  # needed later for event creation
 
     # ---For loop specific variables and for loop for initializing startWeekdaysDatesList values---
     startQuarterWeekday = datetime.date(
