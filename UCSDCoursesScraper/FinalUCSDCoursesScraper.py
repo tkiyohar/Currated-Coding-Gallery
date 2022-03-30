@@ -19,6 +19,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.service import Service
 
 # ****************Google Calendar API Imports***************
+import pytz
 import datetime
 import os.path
 from googleapiclient.discovery import build
@@ -27,7 +28,7 @@ from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 
 # ************Debugging (not used in final code)************
-import pickle
+# import pickle
 
 # ------------------------------------------------------------
 
@@ -547,7 +548,7 @@ try:  # used so that on an error, we can execute code to properly close the sele
                 + selectedTerm
                 + '" below written in the "mm-dd-yyyy" format:'
             )
-            print("(Example: 01-03-2022)")
+            print("(Example: 03-28-2022)")
             startQuarterDate = input()
             # startQuarterDate = "01-03-2022" #debug
             if re.fullmatch(
@@ -581,7 +582,7 @@ try:  # used so that on an error, we can execute code to properly close the sele
                 + selectedTerm
                 + '" below written in the "mm-dd-yyyy" format:'
             )
-            print("(Example: 03-19-2022)")
+            print("(Example: 06-10-2022)")
             endQuarterDate = input()
             # endQuarterDate = "03-19-2022" #debug
             if re.fullmatch(
@@ -643,7 +644,18 @@ try:  # used so that on an error, we can execute code to properly close the sele
                     print(
                         '\nError: Invalid input, please enter either "Y" for "Yes" or "N" for "No"\n'
                     )
-            # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+                # ************Accounting for Daylight Savings Time************
+    laTimezone = pytz.timezone("America/Los_Angeles").localize(
+        datetime.datetime(startQuarterYear, startQuarterMonth, startQuarterDay),
+        is_dst=None,
+    )
+    dstTimeShift = int(laTimezone.tzinfo._dst.seconds / 3600)
+    # ^ returns 1 if dst in effect, 0 if not, and -1 if can't find dst
+    if dstTimeShift != 1 & dstTimeShift != 0:
+        raise Exception("can not determine daylight savings time of startdate")
+        # ************************************************************
+        # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
         # ---------------------------------------------------------------------------------------------
 
     # -------------Creating/Recreating Calendar Instance To Be Filled In By Later Code------------
@@ -785,7 +797,7 @@ try:  # used so that on an error, we can execute code to properly close the sele
                 ":"
             )
 
-            # -----Converting am-pm time input into miltitary time output-----
+            # -----Converting am-pm time input into military time output-----
             if sectionEndTimeMinutes == "00":
                 sectionEndTimeMinutes = sectionEndTimeMinutes[0]
             if sectionStartTimeMinutes == "00":
@@ -804,8 +816,8 @@ try:  # used so that on an error, we can execute code to properly close the sele
                     sectionEndTimeHours += 12
             elif sectionEndTimeHours == 12:
                 sectionEndTimeHours = 0
-            sectionStartTimeHours += hourAdjustment
-            sectionEndTimeHours += hourAdjustment
+            sectionStartTimeHours += hourAdjustment - dstTimeShift
+            sectionEndTimeHours += hourAdjustment - dstTimeShift
             if sectionStartTimeHours >= 24:
                 sectionStartTimeHours -= 24
             if sectionEndTimeHours >= 24:
