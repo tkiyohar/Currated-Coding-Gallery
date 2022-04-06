@@ -10,6 +10,7 @@ import datetime
 import os.path
 import pickle
 import pprint
+from getpass import getpass
 import re
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
@@ -88,6 +89,9 @@ webdriverOptions = webdriver.ChromeOptions()
 webdriverOptions.add_argument(
     "headless"
 )  # causes chrome to run browser in background/invisibly
+webdriverOptions.add_experimental_option(
+    "excludeSwitches", ["enable-logging"]
+)  # prevents DevTools message start-up message from popping up
 # ------------------------------------------------------------
 
 # ---------------------Webpage Addresses----------------------
@@ -235,9 +239,8 @@ try:  # used so that on an error, we can execute code to properly close the sele
 
         # ***************************************Credentials Login****************************************
         for signInAttempts in range(1, 4):  # 3 login attempts to sign in
-            username, password = input("Please Enter Your UCSD Username: "), input(
-                "Please Enter Your UCSD Password: "
-            )
+            username = input("Please Enter Your UCSD Username: ")
+            password = getpass("Please Enter Your UCSD Password: ")
             driver.find_element(By.ID, "ssousername").send_keys(username)
             driver.find_element(By.ID, "ssopassword").send_keys(password)
             driver.find_element(By.NAME, "_eventId_proceed").click()
@@ -662,7 +665,9 @@ try:  # used so that on an error, we can execute code to properly close the sele
     currentCalendarsNamesToID = (
         {}
     )  # used to contain the correlating IDs of all existing calendars to their names
-    customCalendarTitle = "UCSD " + selectedTerm[-4:] + " " + selectedTerm[:-5]
+    customCalendarTitle = (
+        "UCSD " + selectedTerm[-4:] + " " + selectedTerm[:-5] + " (" + username + ")"
+    )
     UCSDCoursesCalendarMetaData = {
         "summary": customCalendarTitle,
         "description": "This calendar has been created autonomously using Python. Do not add to it otherwise your events may be deleted",
