@@ -8,7 +8,7 @@ Examples of previous coding projects documenting problem identification skills a
 - Incorporates other “base” packages like “re” (regular expression), “pickle” (serialize package), “sys” (for custom error throwing and handling), and “pprint” (used for debugging unwieldy outputs).
 - Written to avoid problems I'd encounter previously with my "LAB_HOURS" program maxing out Google's free API calls
 - Automates what would usually amount to multiple hours of busywork into a few minutes.
-- Have received significant interest from all UCSD students who have seen my program at UCSD to sell my code (I haven’t been able to though due to legal issues concerning the data my code handles).
+- Have received significant interest from other UCSD students to purchase my code (I haven’t been able to though due to legal issues concerning the data my code handles).
  
  
 ## LAB_HOURS
